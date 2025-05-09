@@ -216,3 +216,79 @@ Keep them in your dataset as a **feature library**:
 Would you like help organizing the leftovers into grouped thematic sub-indices or deciding which ones to monitor on a live dashboard?
 
 
+---
+
+Economic Indicators not used that contriute to each of these graphs:
+
+Ah — thanks for the clarification! You're asking for **external lagging indicators (not already in your index)** that could be **drivers or contributors** to each index, like how **interest rates** affect all of them indirectly.
+
+Here's a breakdown of **lagging indicators not used in your current formulas**, but which may significantly **influence each index**:
+
+---
+
+### 🧊 **1. Frozen Job Market Index**
+
+**Measures**: Overall labor disruption (tightness + distress + wage/hours + confidence)
+
+#### 🔁 Potential Lagging Contributors (Not Already Used):
+
+* **Federal Funds Rate** → Higher rates cool hiring and freeze market conditions
+* **Personal Savings Rate** → Drops may reflect financial strain or layoffs (https://fred.stlouisfed.org/series/PMSAVE?utm_source=chatgpt.com)
+* **Business Inventories** → Rising inventories = demand slowdown = hiring freeze (https://fred.stlouisfed.org/series/ISRATIO?utm_source=chatgpt.com)
+* **Industrial Production** → Slumps often precede labor freezes
+
+---
+
+### 🔴 **2. Labor Market Distress Index**
+
+**Measures**: Job loss severity and unemployment pain
+
+#### 🔁 Potential Lagging Contributors:
+
+* **Bankruptcies (Business/Personal)** → Often trail layoffs and deepen distress
+* **Duration of Unemployment Insurance Exhaustion** → Indicates persistent hardship
+* **Temporary Help Services Employment** → Weakness here often precedes broader layoffs (https://fred.stlouisfed.org/series/TEMPHELPS)
+* **Poverty Rate (Annual)** → Lags but confirms structural labor stress
+
+---
+
+### 🔵 **3. Labor Market Tightness Index**
+
+**Measures**: Employer-side hiring difficulty, labor scarcity
+
+#### 🔁 Potential Lagging Contributors:
+
+* **Job Vacancy Duration (Time to Fill)** → Longer time = tighter market
+* **Labor Productivity** → Weak productivity can exaggerate tightness effects
+* **Corporate Profit Margins** → Higher margins often correlate with aggressive hiring
+* **ISM Services/Manufacturing Employment Indices** → Hiring sentiment indicators
+
+---
+
+### 🟡 **4. Compensation Pressure Index**
+
+**Measures**: Pressure to raise pay and hours
+
+#### 🔁 Potential Lagging Contributors:
+
+* **Employment Cost Index (ECI)** → Tracks wages + benefits, lags but signals pressure
+* **Unit Labor Costs** → Show rising compensation burden for employers
+* **Producer Price Index (PPI)** → If rising, employers pass input costs to wages
+* **Consumer Credit Growth** → High borrowing may pressure wage demands (https://fred.stlouisfed.org/series/CCLACBW027SBOG#)
+
+---
+
+### 🟢 **5. Mobility & Voluntariness Index**
+
+**Measures**: Confidence to switch jobs, quit voluntarily
+
+#### 🔁 Potential Lagging Contributors:
+
+* **Consumer Confidence Index** → Higher confidence = more quits
+* **Job Switching Premium (Wage Gap)** → Lagging wage data on switchers vs stayers
+* **Homeownership Rate** → More mobility often linked to renters; homeownership can anchor
+* **Retail Sales Growth** → Reflects perceived household stability, enabling job changes
+
+---
+
+Would you like to run a correlation test between these indicators and your indices to validate any relationships?
