@@ -27,7 +27,7 @@
 | Indicator                 | Source              | Notes                                        |
 | ------------------------- | ------------------- | -------------------------------------------- |
 | Unemployment Rate (U-3)   | BLS (`UNRATE`)      | Official unemployment rate                   |
-| **U-6 Unemployment Rate** | BLS (`U6RATE`)      | Includes underemployed & discouraged workers |
+| U-6 Unemployment Rate | BLS (`U6RATE`)      | Includes underemployed & discouraged workers |
 | Initial Jobless Claims    | FRED (`ICSA`)       | Weekly job loss inflow                       |
 | Continued Jobless Claims  | FRED (`CCSA`)       | Persistent unemployment inflow               |
 | Median Weeks Unemployed   | BLS (`LNS13008275`) | Duration signal of unemployment hardship     |
@@ -90,205 +90,77 @@
 
 ---
 
-## 🧊 COMPOSITE INDEX FEATURE ENGINEERING (Frozen Index)
-
-To build the **Frozen Job Market Index**, follow this workflow:
-
-### 1. **Standardize (Z-score)** the following variables:
-
-| Direction        | Variable                                 |
-| ---------------- | ---------------------------------------- |
-| ⬆️ = More Frozen | Median Weeks Unemployed                  |
-| ⬆️ = More Frozen | Unemployment Rate (U-3)                  |
-| ⬆️ = More Frozen | Initial Jobless Claims                   |
-| ⬆️ = More Frozen | U6–U3 Spread                             |
-| ⬇️ = More Frozen | Beveridge Ratio / OpeningsPerUnemployed  |
-| ⬇️ = More Frozen | Quit Rate                                |
-| ⬇️ = More Frozen | Quits-to-Layoffs Ratio                   |
-| ⬇️ = More Frozen | Prime-Age Labor Force Participation Rate |
-| ⬇️ = More Frozen | Prime-Age Employment-to-Population Ratio |
-| ⬇️ = More Frozen | Real Wage Growth                         |
-| ⬇️ = More Frozen | Avg Weekly Hours – Total Private         |
-| ⬇️ = More Frozen | Median Hourly Wage Growth – 3MMA         |
+Yes, creating an **overall Frozen Job Market Index** by combining your four sub-indices absolutely makes sense—and it’s a powerful way to synthesize multiple labor dimensions into a single interpretable signal. You’ve already built the necessary building blocks.
 
 ---
 
-### 2. **Combine** into a composite score:
+### 🔄 **What the Frozen Market Index Represents**
 
-* Option 1: Equal-weight **average**
-* Option 2: **PCA** to extract dominant “freeze” signal
+It captures the *composite health or dysfunction* of the labor market by balancing:
 
----
-
-### 3. **Optional Enhancements**:
-
-* Apply a **3–6 month rolling mean** to smooth volatility
-* Normalize final index on a **0–1 scale**
-* Classify into tiers:
-
-  * **Loose**
-  * **Balanced**
-  * **Mild Freeze**
-  * **Severe Freeze**
+* **Tightness** (demand strength),
+* **Stress** (distress/insecurity),
+* **Compensation Pressure** (wage/hours signals),
+* **Mobility** (worker confidence in switching).
 
 ---
 
+### ✅ Step-by-Step: Create the Composite Index
 
-Great question — now that you've finalized the **set of indicators for the Frozen Job Market Index**, you’re likely wondering:
+#### 1. **Normalize all sub-indices (Z-score or MinMax)**
 
-> What should I do with all the **other indicators or engineered features** I calculated earlier but didn’t include in the final index?
+If they’re already z-scored, you can average them directly. Otherwise:
 
----
+```python
+from sklearn.preprocessing import StandardScaler
 
-## ✅ Here are 5 smart ways to use your **extra features** outside the Frozen Index:
+index_vars = [
+    'Labor_Tightness_Index',
+    'Labor_Stress_Index',
+    'Compensation_Pressure_Index',
+    'Mobility_Voluntariness_Index'
+]
 
----
+scaler = StandardScaler()
+LMT_df[index_vars] = scaler.fit_transform(LMT_df[index_vars])
+```
 
-### 1. 🧩 **Build Thematic Sub-Indices**
+#### 2. **Determine Directionality**
 
-Use your remaining features to create **focused indices** that offer deeper views into specific labor market dimensions:
+To make the **Frozen Index** intuitive (higher = more frozen), invert the scores that reflect *positive conditions*:
 
-| Index Name                  | What to Include                                      | Use Case                               |
-| --------------------------- | ---------------------------------------------------- | -------------------------------------- |
-| `DistressIndex`             | Continued Claims, Long-term Unemployed %, U6 Rate    | Visualizing structural unemployment    |
-| `CompensationPressureIndex` | Real Wage Growth, WeeklyHours\_Trend, MedianWage3MMA | Shows wage inflation and job intensity |
-| `MobilityIndex`             | VoluntaryExitRatio, Total Separations, LayoffShock   | Measures worker confidence in quitting |
+* **Tightness** and **Mobility** are *anti-freeze* indicators → multiply by -1.
 
-Use z-scores and `.mean(axis=1)` just like you did for the Frozen Index.
+```python
+LMT_df['Frozen_Market_Index'] = (
+    -LMT_df['Labor_Tightness_Index'] +   # inverted
+     LMT_df['Labor_Stress_Index'] +      # already distress-based
+     LMT_df['Compensation_Pressure_Index'] +  # wage pressure can be inflationary/freeze-like
+    -LMT_df['Mobility_Voluntariness_Index']   # inverted
+) / 4
+```
 
----
-
-### 2. 📊 **Use for Contextual Dashboards or Heatmaps**
-
-Even if a variable isn’t in the core index, it can **enrich your dashboard**:
-
-* Show heatmaps of current vs. historical percentiles
-* Display “Top 3 signals tightening” or “Cooling fastest”
-* Track **leading indicators** ahead of turning points
-
----
-
-### 3. 🧠 **Use as SHAP Features in a Classification Model**
-
-Train a model to **predict freeze severity tiers** (`Loose`, `Balanced`, etc.), then use:
-
-* All indicators as input features
-* SHAP values to explain which variables **drive severity**
-
-This adds interpretability and allows automated early warning.
+> 🔁 **Optional**: Weight components differently (e.g., stress could have a higher weight during recessions)
 
 ---
 
-### 4. ⏱️ **Backtesting & Scenario Analysis**
+### 📈 Interpretation
 
-Use the extra indicators to **test how sensitive the Frozen Index is** to:
-
-* Wage growth shifts
-* Jobless claims surges
-* Participation collapses
-
-You can build scenario tools: *"What if RealWageGrowth drops 2%?"*
+* **Higher values** = Job market is more "frozen" (hard to hire, low quits, high unemployment/claims).
+* **Lower values** = Healthier, dynamic market.
 
 ---
 
-### 5. 📁 **Feature Library for Expansion**
+### ✅ Optional Enhancements
 
-Keep them in your dataset as a **feature library**:
+* Apply **rolling mean** to smooth volatility:
 
-* Ready for future index updates
-* Available for new models (e.g. Recession Forecasting, Job Market Tightness Score)
-* Valuable if segmenting by **industry**, **region**, or **demographic**
+```python
+LMT_df['Frozen_Market_Index_Smoothed'] = LMT_df['Frozen_Market_Index'].rolling(3, center=True).mean()
+```
 
----
-
-### ✅ Summary Table:
-
-| Action                             | Benefit                                |
-| ---------------------------------- | -------------------------------------- |
-| Sub-indices (e.g. `DistressIndex`) | Deeper insights into market segments   |
-| Dashboard visuals                  | Enhanced storytelling + trend tracking |
-| Model features (e.g. SHAP)         | Interpretation and automation          |
-| Scenario testing                   | What-if planning and policy tools      |
-| Feature library                    | Future-proofing your labor analytics   |
+* Plot over time with recession bands or hiring freezes for comparison.
 
 ---
 
-Would you like help organizing the leftovers into grouped thematic sub-indices or deciding which ones to monitor on a live dashboard?
-
-
----
-
-Economic Indicators not used that contriute to each of these graphs:
-
-Ah — thanks for the clarification! You're asking for **external lagging indicators (not already in your index)** that could be **drivers or contributors** to each index, like how **interest rates** affect all of them indirectly.
-
-Here's a breakdown of **lagging indicators not used in your current formulas**, but which may significantly **influence each index**:
-
----
-
-### 🧊 **1. Frozen Job Market Index**
-
-**Measures**: Overall labor disruption (tightness + distress + wage/hours + confidence)
-
-#### 🔁 Potential Lagging Contributors (Not Already Used):
-
-* **Federal Funds Rate** → Higher rates cool hiring and freeze market conditions
-* **Personal Savings Rate** → Drops may reflect financial strain or layoffs (https://fred.stlouisfed.org/series/PMSAVE?utm_source=chatgpt.com)
-* **Business Inventories** → Rising inventories = demand slowdown = hiring freeze (https://fred.stlouisfed.org/series/ISRATIO?utm_source=chatgpt.com)
-* **Industrial Production** → Slumps often precede labor freezes
-
----
-
-### 🔴 **2. Labor Market Distress Index**
-
-**Measures**: Job loss severity and unemployment pain
-
-#### 🔁 Potential Lagging Contributors:
-
-* **Bankruptcies (Business/Personal)** → Often trail layoffs and deepen distress
-* **Duration of Unemployment Insurance Exhaustion** → Indicates persistent hardship
-* **Temporary Help Services Employment** → Weakness here often precedes broader layoffs (https://fred.stlouisfed.org/series/TEMPHELPS)
-* **Poverty Rate (Annual)** → Lags but confirms structural labor stress
-
----
-
-### 🔵 **3. Labor Market Tightness Index**
-
-**Measures**: Employer-side hiring difficulty, labor scarcity
-
-#### 🔁 Potential Lagging Contributors:
-
-* **Job Vacancy Duration (Time to Fill)** → Longer time = tighter market
-* **Labor Productivity** → Weak productivity can exaggerate tightness effects
-* **Corporate Profit Margins** → Higher margins often correlate with aggressive hiring
-* **ISM Services/Manufacturing Employment Indices** → Hiring sentiment indicators
-
----
-
-### 🟡 **4. Compensation Pressure Index**
-
-**Measures**: Pressure to raise pay and hours
-
-#### 🔁 Potential Lagging Contributors:
-
-* **Employment Cost Index (ECI)** → Tracks wages + benefits, lags but signals pressure
-* **Unit Labor Costs** → Show rising compensation burden for employers
-* **Producer Price Index (PPI)** → If rising, employers pass input costs to wages
-* **Consumer Credit Growth** → High borrowing may pressure wage demands (https://fred.stlouisfed.org/series/CCLACBW027SBOG#)
-
----
-
-### 🟢 **5. Mobility & Voluntariness Index**
-
-**Measures**: Confidence to switch jobs, quit voluntarily
-
-#### 🔁 Potential Lagging Contributors:
-
-* **Consumer Confidence Index** → Higher confidence = more quits
-* **Job Switching Premium (Wage Gap)** → Lagging wage data on switchers vs stayers
-* **Homeownership Rate** → More mobility often linked to renters; homeownership can anchor
-* **Retail Sales Growth** → Reflects perceived household stability, enabling job changes
-
----
-
-Would you like to run a correlation test between these indicators and your indices to validate any relationships?
+Would you like help visualizing it, or building thresholds (e.g. “Loose”, “Mild Freeze”, “Severe Freeze”)?
