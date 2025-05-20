@@ -1,169 +1,112 @@
-
-# All Indicators
-
-## 🧲 **Labor Market Tightness**
-
-*Measures employer demand and labor force engagement*
-**Frequency:** Monthly
-
-| Indicator                                | Source              |
-| ---------------------------------------- | ------------------- |
-| Job Openings Rate                        | JOLTS (`JTSJOL`)    |
-| Hires Rate                               | JOLTS (`JTSHIR`)    |
-| Prime-Age Labor Force Participation Rate | BLS (`LNS11300060`) |
-
-**Feature Engineering:**
-
-* `OpeningsPerUnemployed = Job Openings / Unemployed`
-* `OpeningsPerHire = Job Openings / Hires`
-* `PrimeLFPR_Z = z-score(Prime-Age LFPR)`
-* `ParticipationGap = Pre-pandemic Prime LFPR – Current`
-
+With this rich dataset and well-organized feature sets, your Tableau dashboard can become a powerful tool for **tracking labor market health**, detecting **inflection points**, and telling a **compelling visual story**. Here's a clear and strategic breakdown of **what you should do in Tableau**:
 
 ---
 
-## 😣 **Labor Market Distress**
+## 🧭 **1. Start with a Clear Layout**
 
-*Signals slack, hardship, and rising involuntary unemployment — from early shocks to persistent labor force detachment.*
-**Frequency:** Monthly
+Split your dashboard into **four interactive zones**:
 
-| Indicator                                           | Source                        | Notes                                                            |
-| --------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------- |
-| Unemployment Rate (U-3)                             | BLS (`UNRATE`)                | Headline unemployment, captures active jobseekers                |
-| Unemployment Rate (U-6)                             | BLS (`U6RATE`)                | Broader measure incl. discouraged and underemployed              |
-| Unemployment Rate (U-2)                             | BLS (`U2RATE`)                | Job losers and temp job completers; early distress signal        |
-| Initial Jobless Claims                              | FRED (`ICSA`)                 | Weekly flow of new unemployment claims                           |
-| Continued Jobless Claims                            | FRED (`CCSA`)                 | Signals persistent unemployment conditions                       |
-| Median Weeks Unemployed                             | BLS (`UEMPMED`)               | Duration of joblessness; hardship signal                         |
-| Long-term Unemployed Share                          | Derived (UEMP27OV / UNEMPLOY) | Share of unemployed without work for 27+ weeks                   |
-| Part-Time for Economic Reasons                      | BLS (`LNS12032194`)           | Involuntary part-time workers                                    |
-| Not in Labor Force – Want a Job Now                 | FRED (`NILFWJN`)              | Broad group who want work but are not searching                  |
-| Marginally Attached (Want Job Now, Recently Looked) | BLS (`LNU05026645`)           | Subset of NILFWJN; looked in past 12 months but not last 4 weeks |
-| Insured Unemployment Rate                           | FRED (`IURSA`)                | Unemployment claims as % of covered workforce                    |
+* **Overview**: Key headline indices (frozen market, supply-demand gap, tightness/distress)
+* **Demand-Side Visuals**: Heat/pressure indicators
+* **Supply-Side Visuals**: Slack/friction indicators
+* **Deep Dives**: Composite index breakdowns, YoY trends, and Z-scores
 
 ---
 
-### 🧠 **Feature Engineering:**
+## 📌 **2. Highlight Key Composite Indices**
 
-* `U6_U3_Spread = U6RATE - U3RATE`
-  *Captures hidden slack beyond headline unemployment*
-* `Unemployed27Share = UEMP27OV / UNEMPLOY`
-  *Signals duration-based labor hardship*
-* `InvoluntaryPartTimeRate = LNS12032194 / Employed`
-  *Quantifies underemployment and hours cutbacks*
-* `NILFWJN_Ratio = NILFWJN / NotInLaborForce`
-  *Captures general desire for work across non-participants*
-* `MarginalAttachmentRate = LNU05026645 / NotInLaborForce`
-  *Stricter labor market detachment metric*
-* `MedianWeeks_Z = z-score(MedianWeeksUnemployed)`
-* `U2_Z = z-score(U2RATE)`
-* `DistressIndex = mean(z-scores of all indicators above)`
+These are your executive-level signals.
 
----
+**Widgets / Visuals**:
 
-Let me know if you'd like help visualizing how these move during historical recessions or integrating them into a PCA-based distress index.
-          |
+* **KPI Cards** for:
+
+  * `Frozen_Market_Index`
+  * `Labor_Tightness_Index`
+  * `Labor_Distress_Index`
+  * `Supply_Demand_Gap_Index`
+* **Line Chart with Shaded Recessions**:
+
+  * Overlay `Frozen_Market_Index` and `Supply_Demand_Gap_Index` over time
+  * Add bands for NBER recession periods
 
 ---
 
-## 🔁 **Labor Mobility & Confidence**
+## 🔥 **3. Demand-Side Visuals (Heat / Pressure)**
 
-*Tracks voluntary movement, layoffs, and temp labor demand*
-**Frequency:** Monthly
+Show indicators that reflect **employer-side activity**.
 
-| Indicator                                      | Source                |
-| ---------------------------------------------- | --------------------- |
-| Quit Rate                                      | JOLTS (`JTSQUR`)      |
-| Layoffs and Discharges                         | JOLTS (`JTSLDL`)      |
-| Total Separations                              | JOLTS (`JTSTSL`)      |
-| Temporary Help Services Employment             | CES (`CES6054880001`) |
-| Effective Federal Funds Rate (contextual only) | FRED (`FEDFUNDS`)     |
+**Charts**:
 
-**Feature Engineering:**
+* **Line or area charts over time**:
 
-* `QuitsToLayoffs = Quits / Layoffs`
-* `VoluntaryExitRatio = Quits / Separations`
-* `LayoffShock = % MoM change in Layoffs`
-* `TempHelpMoM = % change in TEMPHELPS`
-* `SeparationFlow_Z = z-score(Total Separations)`
-* `FedFundsShock = % Δ in FEDFUNDS (contextual only)`
+  * `Labor_Tightness_Index`
+  * `Compensation_Pressure_Index`
+  * `Labor_Market_Flow_Index`
+* **Bar charts** for year comparisons or highlights:
+
+  * `OpeningsPerHire`, `QuitsPerLayoffs`
+
+**Tooltips**:
+
+* Include commentary on what rising/falling values mean
 
 ---
 
-## 💸 **Compensation & Participation Signals**
+## 🧊 **4. Supply-Side Visuals (Slack / Friction)**
 
-*Measures wage pressure, real earnings growth, work intensity, and participation in the labor market*
-**Frequency:** Monthly
+Expose **hidden labor force weakness or friction**.
 
-| Indicator                                | Source                    | Notes                                          |
-| ---------------------------------------- | ------------------------- | ---------------------------------------------- |
-| Avg Weekly Earnings – Total Private      | CES (`CES0500000030`)     | Nominal earnings across majority of workforce  |
-| Median Hourly Wage Growth – 3MMA         | ATL Fed (`FRBATLWGT3MMA`) | Smoothed median wage change, outlier-resistant |
-| Prime-Age Employment-to-Population Ratio | BLS (`LNS12300060`)       | Core employment engagement (ages 25–54)        |
-| Prime-Age Labor Force Participation Rate | BLS (`LNS11300060`)       | Best signal of labor force engagement          |
-| Avg Weekly Hours – Total Private         | CES (`AWHAETP`)           | Reflects changes in workload and hiring demand |
+**Charts**:
 
----
+* **Line charts** for:
 
-### 🧠 **Feature Engineering:**
+  * `Labor_Distress_Index`
+  * `Latent_Labor_Slack_Index`
+  * `Hiring_Friction_Index`
+  * `Hiring_Latency_Index`
+* **Scatter plot**:
 
-* `AvgHourlyEarning_YoY = YoY % change in Avg Weekly Earnings`
-  *Captures nominal wage growth*
-* `RealWageGrowth = AvgHourlyEarning_YoY – CPI_YoY`
-  *Measures purchasing power of wages*
-* `MedianWage3MMA_Z = z-score(Median Wage 3MMA)`
-  *Standardized short-term wage signal*
-* `PrimeEPOP_Z = z-score(Prime-Age Employment-to-Population)`
-  *Normalized employment engagement*
-* `PrimeLFPR_Trend = Current LFPR – LFPR 12 months ago`
-  *Longitudinal participation shift*
-* `WeeklyHours_Trend = Change in Avg Weekly Hours over 12 months`
-  *Captures work intensity trends*
+  * `Hiring_Friction_Index` vs `Hiring_Latency_Index` (to detect mismatch zones)
 
-## ❄️ **Structural Freeze Confirmers (New Category)**
+**Filters**:
 
-*Quarterly indicators that confirm structural slowdowns and investment freezes*
-**Frequency:** Quarterly
-
-| Indicator                               | Source              |
-| --------------------------------------- | ------------------- |
-| Labor Productivity (Output per Hour)    | BLS (`PRS85006092`) |
-| Private Nonresidential Fixed Investment | BEA (`PNFI`)        |
-
-**Feature Engineering:**
-
-* `ProductivityTrend = QoQ % Δ in Labor Productivity`
-* `InvestmentTrend = % change in PNFI`
+* Add toggle filters for `Z-Score`, `YoY`, and raw values
 
 ---
 
-Would you like help now grouping these into an index construction pipeline — e.g., clustering, PCA, or forecasting with regime transitions?
+## 🔍 **5. Deep Dive Explorations**
+
+Allow users to **explore individual components** behind the indices.
+
+**Interactive Tables or Parameter Controls**:
+
+* Select an index to break down into component variables (e.g., `Labor_Tightness_Index` → `OpeningsPerUnemployed`, etc.)
+* Use `Z-Score` plots to show standardized deviation over time
 
 ---
 
-# Create the Indicies
+## 📊 **6. Add Storytelling Features**
 
-To construct each of these labor market sub-indices — **Labor Tightness**, **Labor Distress**, **Mobility & Confidence**, and **Compensation Pressure** — you’ll follow a consistent **4-step methodology** for each:
+Make it not just a dashboard—but a narrative.
 
----
+**Suggestions**:
 
-### 🔧 GENERAL STEPS TO BUILD EACH INDEX:
-
-1. **Normalize Indicators**
-   Use **Z-scores** or **percentage changes** to standardize across units (e.g., rates vs. counts).
-
-2. **Align Directionality**
-   Ensure all components move in the same direction with respect to tightness/distress/etc. (e.g., higher = tighter).
-
-3. **Aggregate Indicators**
-   Combine via:
-
-   * Mean of Z-scores (simple, interpretable)
-   * PCA (captures primary common signal)
-   * Weighted sum (if domain knowledge suggests)
-
-4. **Optional: Smooth or Transform**
-   Apply rolling average (e.g., 3-month) or exponential smoothing for stability.
+* Annotated milestones (e.g., "2020 pandemic shock", "2022 inflation spike")
+* Dashboard tabs or buttons: *Demand View*, *Supply View*, *Composite Signals*
+* Dynamic **“Heat Meter”** or index thermometer showing how frozen or overheated the market is
 
 ---
 
+## ✅ **7. Final Touches**
+
+* Add **color-coding**:
+
+  * 🔴 Red for demand-side
+  * 🔵 Blue for supply-side
+* Use **tooltips and definitions** for each metric
+* Allow **download/export** of filtered data views
+
+---
+
+Would you like a **wireframe mockup of the Tableau layout** or suggestions on calculated fields and parameters within Tableau itself?
