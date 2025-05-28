@@ -1,112 +1,74 @@
-With this rich dataset and well-organized feature sets, your Tableau dashboard can become a powerful tool for **tracking labor market health**, detecting **inflection points**, and telling a **compelling visual story**. Here's a clear and strategic breakdown of **what you should do in Tableau**:
+# Measuring How Frozen & Imbalanced the Job Market Is
+
+### *(01-03-2006 to 03-01-2025)*
+
+## Project Overview
+
+This project constructs and analyzes a set of **labor market health metrics** by combining publicly available economic indicators to assess how "frozen" or "imbalanced" the U.S. job market is over time. It blends demand and supply-side labor data to engineer composite indicators and visualize market trends.
 
 ---
 
-## 🧭 **1. Start with a Clear Layout**
+## Key Features
 
-Split your dashboard into **four interactive zones**:
+### Derived Supply & Demand Metrics
 
-* **Overview**: Key headline indices (frozen market, supply-demand gap, tightness/distress)
-* **Demand-Side Visuals**: Heat/pressure indicators
-* **Supply-Side Visuals**: Slack/friction indicators
-* **Deep Dives**: Composite index breakdowns, YoY trends, and Z-scores
-
----
-
-## 📌 **2. Highlight Key Composite Indices**
-
-These are your executive-level signals.
-
-**Widgets / Visuals**:
-
-* **KPI Cards** for:
-
-  * `Frozen_Market_Index`
-  * `Labor_Tightness_Index`
-  * `Labor_Distress_Index`
-  * `Supply_Demand_Gap_Index`
-* **Line Chart with Shaded Recessions**:
-
-  * Overlay `Frozen_Market_Index` and `Supply_Demand_Gap_Index` over time
-  * Add bands for NBER recession periods
+| **Metric**                | **Formula**                              | **Insight**                          | **Type** |
+| ------------------------- | ---------------------------------------- | ------------------------------------ | -------- |
+| OpeningsPerUnemployed     | Job Openings Rate / Unemployment Level   | Signals labor tightness              | Demand   |
+| OpeningsPerHire           | Job Openings Rate / Hires Rate           | Hiring friction or mismatch          | Demand   |
+| HiresPerUnemployed        | Hires Rate / Unemployment Level          | Efficiency of absorbing unemployed   | Demand   |
+| QuitsPerUnemployed        | Quits Rate / Unemployment Level          | Worker confidence                    | Supply   |
+| LayoffsPerOpening         | Layoffs / Job Openings Rate              | Contradictory signals                | Supply   |
+| QuitsPerLayoffs           | Quits Rate / Layoffs                     | Voluntary vs involuntary separations | Supply   |
+| NILFWJNPerPop             | NILFWJN / Total Population               | Hidden slack in labor                | Supply   |
+| MarginallyAttachedPerNILF | Marginally Attached / Not in Labor Force | Re-entry potential                   | Supply   |
+| CPIYOY                    | %Δ CPI over 12 months                    | Inflation trend                      | Demand   |
+| TempHelpEmploymentYoY     | %Δ Temp Jobs YoY                         | Leading demand signal                | Demand   |
+| AvgWeeklyEarningYoY       | %Δ Avg Weekly Earnings YoY               | Wage growth                          | Demand   |
+| RealAvgWeeklyEarningsYoY  | Earnings YoY - CPIYOY                    | Real wage pressure                   | Supply   |
+| U6\_U3\_Spread            | U6 - U3 Unemployment Rate                | Underemployment spread               | Supply   |
+| HourlyEarningEstimate     | Weekly Earnings / Weekly Hours           | Adjusted wage pressure               | Demand   |
+| ApplicantsPerJobProxy     | Unemployment Level / Job Openings Rate   | Job seeker congestion                | Supply   |
 
 ---
 
-## 🔥 **3. Demand-Side Visuals (Heat / Pressure)**
+## Data Sources & Loading
 
-Show indicators that reflect **employer-side activity**.
+The project uses a large set of CSV files sourced from labor market datasets including:
 
-**Charts**:
+* Layoffs, Hires, Job Openings, Quits
+* CPI, Weekly Earnings & Hours
+* Unemployment Measures (U2, U3, U6)
+* Labor Force & Population Data
+* Temp Help Employment, Wage Growth, Marginal Attachment
 
-* **Line or area charts over time**:
-
-  * `Labor_Tightness_Index`
-  * `Compensation_Pressure_Index`
-  * `Labor_Market_Flow_Index`
-* **Bar charts** for year comparisons or highlights:
-
-  * `OpeningsPerHire`, `QuitsPerLayoffs`
-
-**Tooltips**:
-
-* Include commentary on what rising/falling values mean
+These datasets are read using `pandas` and merged into a unified SQL-based in-memory database via `sqlite3`.
 
 ---
 
-## 🧊 **4. Supply-Side Visuals (Slack / Friction)**
+## Methods
 
-Expose **hidden labor force weakness or friction**.
-
-**Charts**:
-
-* **Line charts** for:
-
-  * `Labor_Distress_Index`
-  * `Latent_Labor_Slack_Index`
-  * `Hiring_Friction_Index`
-  * `Hiring_Latency_Index`
-* **Scatter plot**:
-
-  * `Hiring_Friction_Index` vs `Hiring_Latency_Index` (to detect mismatch zones)
-
-**Filters**:
-
-* Add toggle filters for `Z-Score`, `YoY`, and raw values
+* Clean and normalize datasets
+* Merge them on observation dates
+* Derive meaningful ratios and indicators
+* Calculate YoY percent changes and real wage growth
+* Export a master `Supply_Demand_Indicators_df` for analysis and visualization
 
 ---
 
-## 🔍 **5. Deep Dive Explorations**
+## Output
 
-Allow users to **explore individual components** behind the indices.
+The merged and engineered dataset can be used for:
 
-**Interactive Tables or Parameter Controls**:
-
-* Select an index to break down into component variables (e.g., `Labor_Tightness_Index` → `OpeningsPerUnemployed`, etc.)
-* Use `Z-Score` plots to show standardized deviation over time
-
----
-
-## 📊 **6. Add Storytelling Features**
-
-Make it not just a dashboard—but a narrative.
-
-**Suggestions**:
-
-* Annotated milestones (e.g., "2020 pandemic shock", "2022 inflation spike")
-* Dashboard tabs or buttons: *Demand View*, *Supply View*, *Composite Signals*
-* Dynamic **“Heat Meter”** or index thermometer showing how frozen or overheated the market is
+* Time series analysis of labor dynamics
+* Composite index creation (e.g., Frozen Market Index)
+* Tableau dashboards for visualization
+* Policy research on hiring frictions, worker confidence, and labor slack
 
 ---
 
-## ✅ **7. Final Touches**
+## Next Steps
 
-* Add **color-coding**:
-
-  * 🔴 Red for demand-side
-  * 🔵 Blue for supply-side
-* Use **tooltips and definitions** for each metric
-* Allow **download/export** of filtered data views
-
----
-
-Would you like a **wireframe mockup of the Tableau layout** or suggestions on calculated fields and parameters within Tableau itself?
+* Build a time series forecasting model to determie the fure
+* See how it contributes to economic indicators not included in calculations or how other indicators contribute to it (Ex. Inflation Rate, Interest Rates, Industrial Production, etc.)
+* Evaluate index stability and predictive power for recessions or booms
