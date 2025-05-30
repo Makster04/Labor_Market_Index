@@ -1,120 +1,118 @@
-# NLP_Summary
-Here’s a clear, step-by-step breakdown of how **Natural Language Processing (NLP)** is typically done in a data science project:
+Great! Here’s a **step-by-step guide** to:
+
+1. ✅ Set up Reddit API credentials
+2. ✅ Use `praw` to fetch **both posts and comments**
+3. ✅ Preprocess and run **basic sentiment analysis**
 
 ---
 
-### 🔹 **Step 1: Define the Problem**
-Decide what NLP task you're trying to do. Common ones include:
-- **Text classification** (e.g., spam detection, sentiment analysis)
-- **Named Entity Recognition (NER)** (e.g., extract company names, locations)
-- **Topic modeling** (e.g., uncover hidden themes)
-- **Text summarization**
-- **Question answering**
-- **Language translation**
+## 🔐 STEP 1: Set Up Reddit API Credentials
 
-🧠 *Example:* “Classify tweets as positive, negative, or neutral.”
+1. Go to [https://www.reddit.com/prefs/apps](https://www.reddit.com/prefs/apps)
+2. Scroll down and click: **"create app"**
+3. Fill out:
+
+   * **Name:** `swing_state_scraper`
+   * **Type:** `script`
+   * **Redirect URI:** `http://localhost`
+4. After submission, you’ll get:
+
+   * `client_id` (below the app name)
+   * `client_secret` (in the app details)
 
 ---
 
-### 🔹 **Step 2: Collect Text Data**
-Gather raw text data from one or more sources:
-- Social media (e.g., Twitter API)
-- Web scraping (e.g., news articles using BeautifulSoup)
-- Open datasets (e.g., IMDb reviews, Kaggle datasets)
+## 📦 STEP 2: Install `praw`
+
+```bash
+pip install praw
+```
+
+---
+
+## 🧪 STEP 3: Use `praw` to Fetch Posts + Comments
 
 ```python
+import praw
 import pandas as pd
-df = pd.read_csv("tweets.csv")
+from datetime import datetime
+
+# 🔑 Replace with your actual credentials
+reddit = praw.Reddit(
+    client_id="YOUR_CLIENT_ID",
+    client_secret="YOUR_CLIENT_SECRET",
+    user_agent="swing_state_scraper"
+)
+
+def fetch_reddit_posts_and_comments(subreddit_name, limit=50):
+    subreddit = reddit.subreddit(subreddit_name)
+    data = []
+
+    for submission in subreddit.hot(limit=limit):
+        if not submission.stickied:
+            post = {
+                'title': submission.title,
+                'text': submission.selftext,
+                'created_utc': datetime.utcfromtimestamp(submission.created_utc),
+                'subreddit': subreddit_name,
+                'comments': []
+            }
+
+            submission.comments.replace_more(limit=0)  # Load all comments
+            post['comments'] = [comment.body for comment in submission.comments[:10]]  # Top 10 comments
+
+            data.append(post)
+
+    return pd.DataFrame(data)
+
+# Example usage
+df = fetch_reddit_posts_and_comments('PApolitics', limit=20)
+print(df.head(3))
 ```
 
 ---
 
-### 🔹 **Step 3: Clean and Preprocess the Text**
-This turns messy raw text into structured input for models.
+## 💬 STEP 4: Sentiment Analysis with TextBlob
 
-Key preprocessing steps:
-1. **Lowercasing**
-2. **Removing punctuation, numbers, or special characters**
-3. **Tokenization** – Split text into words
-4. **Stopword removal** – Remove common, low-information words like “the”, “is”
-5. **Stemming/Lemmatization** – Reduce words to their root form
+```bash
+pip install textblob
+python -m textblob.download_corpora
+```
 
 ```python
-import re
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+from textblob import TextBlob
 
-nltk.download('stopwords')
-nltk.download('wordnet')
+def analyze_sentiment(text):
+    if not text:
+        return 0
+    return TextBlob(text).sentiment.polarity  # [-1 to 1]
 
-def clean_text(text):
-    text = re.sub(r"[^a-zA-Z]", " ", text.lower())
-    tokens = text.split()
-    tokens = [WordNetLemmatizer().lemmatize(word) for word in tokens if word not in stopwords.words('english')]
-    return " ".join(tokens)
+# Add sentiment scores
+df['post_sentiment'] = df['text'].apply(analyze_sentiment)
+df['avg_comment_sentiment'] = df['comments'].apply(lambda comments: 
+    sum(analyze_sentiment(c) for c in comments) / len(comments) if comments else 0
+)
 
-df['cleaned'] = df['text'].apply(clean_text)
+print(df[['title', 'post_sentiment', 'avg_comment_sentiment']].head())
 ```
 
 ---
 
-### 🔹 **Step 4: Convert Text to Features (Vectorization)**
-Machine learning needs numeric input. Convert text to vectors using:
+## ✅ Optional: Filter for Swing State Topics
 
-- **Bag of Words (CountVectorizer)**
-- **TF-IDF (Term Frequency-Inverse Document Frequency)**
-- **Word Embeddings** (e.g., Word2Vec, GloVe)
-- **Transformer-based embeddings** (e.g., BERT, RoBERTa)
+You can apply keyword filters like:
 
 ```python
-from sklearn.feature_extraction.text import TfidfVectorizer
-
-vectorizer = TfidfVectorizer(max_features=1000)
-X = vectorizer.fit_transform(df['cleaned'])
+keywords = ['healthcare', 'jobs', 'abortion', 'biden', 'trump', 'inflation']
+df_filtered = df[df['text'].str.contains('|'.join(keywords), case=False)]
 ```
 
 ---
 
-### 🔹 **Step 5: Train a Model**
-Use the text features to train a model like:
-- Logistic Regression
-- Naive Bayes
-- Random Forest
-- Support Vector Machines (SVM)
-- Neural Networks
-- Transformers (BERT for advanced NLP)
+Would you like to:
 
-```python
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
+* Turn this into a live dashboard or report?
+* Extract topics (LDA or BERTopic)?
+* Expand to multiple swing-state subreddits (e.g. `r/WisconsinPolitics`, `r/Michigan`)?
 
-y = df['label']  # e.g., sentiment label
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-model = LogisticRegression()
-model.fit(X_train, y_train)
-```
-
----
-
-### 🔹 **Step 6: Evaluate the Model**
-Use accuracy, precision, recall, F1-score, and confusion matrix.
-
-```python
-from sklearn.metrics import classification_report
-
-y_pred = model.predict(X_test)
-print(classification_report(y_test, y_pred))
-```
-
----
-
-### 🔹 **Step 7: Interpret or Deploy**
-- Use **SHAP** or **LIME** for interpretability
-- Package as an API using Flask/FastAPI
-- Deploy model on the web/cloud (e.g., Heroku, AWS)
-
----
-
-Would you like a code notebook or example project for one of these steps (e.g., sentiment analysis)?
+Let me know how far you’d like to scale this.
