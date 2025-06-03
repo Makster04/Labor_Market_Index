@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # Labor Market Friction & Freeze Dashboard
 
@@ -173,5 +174,4 @@ Tableau was essential for delivering **clean, intuitive, and layered narratives*
 ## Conclusion
 
 The Frozen Market Index transforms complex labor dynamics into a clear, actionable signal. Through composite z-score modeling, SHAP interpretability, and rich Tableau visualization, this framework provides a powerful tool for diagnosing and communicating labor market shifts. It’s built for policymakers, practitioners, and analysts looking to bridge data complexity with insight-driven action.
-
 
