@@ -1,4 +1,4 @@
-observation_date,Job_Openings_Rate
+observation_date,Hires_Rate
 2000-12-01,5426
 2001-01-01,5722
 2001-02-01,5303
@@ -290,4 +290,5 @@ observation_date,Job_Openings_Rate
 2024-12-01,5374
 2025-01-01,5371
 2025-02-01,5370
-2025-03-01,5411
+2025-03-01,5404
+2025-04-01,5573
