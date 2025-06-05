@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-
-# Labor Market Friction & Freeze Dashboard
-
-## Overview
-
 ### Business and Data Understanding
 
 **Business Problem**
