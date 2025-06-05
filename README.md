@@ -1,118 +1,177 @@
-Great! Here’s a **step-by-step guide** to:
+<<<<<<< HEAD
 
-1. ✅ Set up Reddit API credentials
-2. ✅ Use `praw` to fetch **both posts and comments**
-3. ✅ Preprocess and run **basic sentiment analysis**
+# Labor Market Friction & Freeze Dashboard
+
+## Overview
+
+### Business and Data Understanding
+
+**Business Problem**
+Traditional labor indicators (e.g., unemployment rate, job openings) often fail to explain the **underlying friction** in the labor market—why hiring slows, why participation drops, or why wage pressure exists even during full employment. Policymakers and businesses need a more **holistic, interpretable signal** to guide decisions during dynamic labor cycles.
+
+**Primary Stakeholders**
+
+* **Federal Reserve, Policy Researchers, and Think Tanks** – Diagnose slack, overheating, or freeze conditions in real time.
+* **HR Executives & Business Leaders** – Detect labor market pressure points that affect hiring pipelines.
+* **Journalists & Economic Analysts** – Gain clean visual narratives for public explanation.
+* **Labor Economists & Academic Researchers** – Use multidimensional indicators for structural analysis.
+
+**Objective**
+Construct a **composite labor index framework** using interpretable components that measure:
+
+* Labor demand (heat & pressure)
+* Labor supply (slack & friction)
+* Composite "freeze" risk over time
+  Visualize these trends using Tableau for public and policy-facing storytelling.
 
 ---
 
-## 🔐 STEP 1: Set Up Reddit API Credentials
+## Data Understanding
 
-1. Go to [https://www.reddit.com/prefs/apps](https://www.reddit.com/prefs/apps)
-2. Scroll down and click: **"create app"**
-3. Fill out:
+**Sources**:
 
-   * **Name:** `swing_state_scraper`
-   * **Type:** `script`
-   * **Redirect URI:** `http://localhost`
-4. After submission, you’ll get:
+* BLS (JOLTS, CPS, CES)
+* FRED via API or CSV downloads
+* Custom proxies (e.g., Applicants per Job)
 
-   * `client_id` (below the app name)
-   * `client_secret` (in the app details)
+**Indicator Themes**:
+
+* **Demand-Side**: Quits, Openings, Hires, Wage Growth, Participation
+* **Supply-Side**: Underemployment, Involuntary Part-Time, Labor Slack, Hiring Delays
 
 ---
 
-## 📦 STEP 2: Install `praw`
+## Index Construction
 
-```bash
-pip install praw
+### Demand-Side Indices
+
+* **Labor Tightness Index**
+  *Components:* Job Openings Rate, Hires Rate, Quits Rate
+  *Interpretation:* Higher values = strong employer demand and worker confidence.
+
+* **Compensation Pressure Index**
+  *Components:* Real Wage Growth, Median Hourly Wage Growth, Prime-age Employment Ratio
+  *Interpretation:* High = wage-driven hiring pressure.
+
+* **Labor Market Flow Index**
+  *Components:* Quits, Temp Help YoY, Separations
+  *Interpretation:* High = fluid, dynamic labor movement.
+
+---
+
+### Supply-Side Indices
+
+* **Labor Distress Index**
+  *Components:* Unemployed, NILFWJN, Marginally Attached, Involuntary Part-Time, Applicants per Job
+  *Interpretation:* High = widespread job-seeking friction.
+
+* **Hiring Friction Index**
+  *Components:* Openings per Hire, Layoffs per Opening
+  *Interpretation:* High = mismatch between jobs and applicants.
+
+* **Hiring Latency Index**
+  *Components:* Openings per Hire, Median Weeks Unemployed
+  *Interpretation:* High = long delays between job posting and fulfillment.
+
+---
+
+### 🧊 Frozen Market Index
+
+**Formula**
+
+```plaintext
+Frozen Market Index = 
++ Labor_Distress_Index  
++ Hiring_Friction_Index  
++ Hiring_Latency_Index  
++ Latent_Labor_Slack_Index  
+- Labor_Tightness_Index  
+- Compensation_Pressure_Index  
+- Labor_Market_Flow_Index
 ```
 
----
-
-## 🧪 STEP 3: Use `praw` to Fetch Posts + Comments
-
-```python
-import praw
-import pandas as pd
-from datetime import datetime
-
-# 🔑 Replace with your actual credentials
-reddit = praw.Reddit(
-    client_id="YOUR_CLIENT_ID",
-    client_secret="YOUR_CLIENT_SECRET",
-    user_agent="swing_state_scraper"
-)
-
-def fetch_reddit_posts_and_comments(subreddit_name, limit=50):
-    subreddit = reddit.subreddit(subreddit_name)
-    data = []
-
-    for submission in subreddit.hot(limit=limit):
-        if not submission.stickied:
-            post = {
-                'title': submission.title,
-                'text': submission.selftext,
-                'created_utc': datetime.utcfromtimestamp(submission.created_utc),
-                'subreddit': subreddit_name,
-                'comments': []
-            }
-
-            submission.comments.replace_more(limit=0)  # Load all comments
-            post['comments'] = [comment.body for comment in submission.comments[:10]]  # Top 10 comments
-
-            data.append(post)
-
-    return pd.DataFrame(data)
-
-# Example usage
-df = fetch_reddit_posts_and_comments('PApolitics', limit=20)
-print(df.head(3))
-```
+**Purpose:** Captures when labor market activity "freezes" due to high friction and low mobility.
 
 ---
 
-## 💬 STEP 4: Sentiment Analysis with TextBlob
+## Modeling & Interpretability
 
-```bash
-pip install textblob
-python -m textblob.download_corpora
-```
+### SHAP Analysis (Regional Housing Extension)
 
-```python
-from textblob import TextBlob
+In a complementary housing market analysis:
 
-def analyze_sentiment(text):
-    if not text:
-        return 0
-    return TextBlob(text).sentiment.polarity  # [-1 to 1]
+* **Features**: Vacancy rate, affordability, new unit growth, rent/ownership burden
+* **Target**: Regional Housing Market Index
+* **Method**: `XGBoostRegressor` + `shap.Explainer`
 
-# Add sentiment scores
-df['post_sentiment'] = df['text'].apply(analyze_sentiment)
-df['avg_comment_sentiment'] = df['comments'].apply(lambda comments: 
-    sum(analyze_sentiment(c) for c in comments) / len(comments) if comments else 0
-)
+**Outputs**:
 
-print(df[['title', 'post_sentiment', 'avg_comment_sentiment']].head())
-```
+* SHAP summary plots explain top drivers across metro areas
+* Waterfall plots highlight city-level index explanations
 
 ---
 
-## ✅ Optional: Filter for Swing State Topics
+## Visualization with Tableau
 
-You can apply keyword filters like:
+All index time series and SHAP results were **visualized in Tableau** to support:
 
-```python
-keywords = ['healthcare', 'jobs', 'abortion', 'biden', 'trump', 'inflation']
-df_filtered = df[df['text'].str.contains('|'.join(keywords), case=False)]
-```
+* Interactive dashboards for supply vs. demand dynamics
+* Annotated trendlines across business cycles (2006–2025)
+* Recession shading (gray bands) to contextualize macroeconomic regimes
+* Index formula callouts for transparency
+* Region-level comparisons (in future stages)
+
+Tableau was essential for delivering **clean, intuitive, and layered narratives** for analysts, journalists, and stakeholders.
 
 ---
 
-Would you like to:
+## Evaluation
 
-* Turn this into a live dashboard or report?
-* Extract topics (LDA or BERTopic)?
-* Expand to multiple swing-state subreddits (e.g. `r/WisconsinPolitics`, `r/Michigan`)?
+**Strengths**:
 
-Let me know how far you’d like to scale this.
+* Breaks away from siloed economic metrics
+* Combines supply & demand views into a comprehensive signal
+* SHAP integration explains model logic for regional housing stress
+* Tableau enables accessible storytelling for public & professional users
+
+**Limitations**:
+
+* Z-scores require stable baseline behavior; sensitive to outliers
+* Some proxies (e.g., NILFWJN, Temp Help) depend on data freshness
+* Lagging indicators may mask near-term shifts
+
+---
+
+## Next Steps
+
+1. **Forecast the Index Forward**
+   Use ARIMA or XGBoost time-series models to project labor freeze risk.
+
+2. **Metro-Level Freeze Index**
+   Apply the same framework to regional data for localized heat/slack analysis.
+
+3. **Add Real-Time Data Feeds**
+   Automate updates via FRED API and BLS pipelines for near-live dashboarding.
+
+4. **Policy Simulation Engine**
+   Test what-if scenarios (e.g., "What if wage growth surges?" or "What if quits collapse?").
+
+---
+
+## Business Recommendations
+
+1. **Use Composite Indices to Guide Policy**
+   Fed governors and state labor offices should monitor the Frozen Market Index alongside inflation and GDP.
+
+2. **Warn of Freeze Before It Hits**
+   Rising distress + declining flows signal hiring paralysis—enable preemptive interventions.
+
+3. **Improve Hiring Pipeline Metrics**
+   Companies should track their own "hiring latency" to diagnose internal friction.
+
+---
+
+## Conclusion
+
+The Frozen Market Index transforms complex labor dynamics into a clear, actionable signal. Through composite z-score modeling, SHAP interpretability, and rich Tableau visualization, this framework provides a powerful tool for diagnosing and communicating labor market shifts. It’s built for policymakers, practitioners, and analysts looking to bridge data complexity with insight-driven action.
+
